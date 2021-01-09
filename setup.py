@@ -19,9 +19,10 @@ __version__ = "0.0.1"
 
 ext_modules = [
     Pybind11Extension("pyspng",
-        ["src/main.cpp"],
+        ["src/libspng-0.6.1/spng/spng.c", "src/main.cpp"],
         # Example: passing in the version to the compiled code
         define_macros = [('VERSION_INFO', __version__)],
+        libraries=['z'],
     ),
 ]
 
