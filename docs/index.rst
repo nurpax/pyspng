@@ -1,10 +1,9 @@
-python_example Documentation
-============================
+pyspng Documentation
+====================
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
-   python_example
-
+   pyspng

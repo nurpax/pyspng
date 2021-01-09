@@ -1,5 +1,5 @@
 package:
-  name: python_example
+  name: pyspng
   version: 0.0.1
 
 source:
@@ -24,12 +24,12 @@ requirements:
 
 test:
   imports:
-    - python_example
+    - pyspng
   source_files:
     - tests
   commands:
     - python tests/test.py
 
 about:
-  summary: An example project built with pybind11.
+  summary: Minimal python bindings for libspng.
   license_file: LICENSE
