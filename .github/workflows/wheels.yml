@@ -11,6 +11,7 @@ on:
       - published
 
 env:
+  CIBW_TEST_REQUIRES: pillow
   CIBW_TEST_COMMAND: python {project}/tests/test.py
 
 
