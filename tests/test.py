@@ -4,7 +4,7 @@ import os
 
 import pyspng as m
 
-assert m.__version__ == '0.0.1'
+print ('pyspng version', m.__version__)
 
 fname = os.path.join(os.path.dirname(__file__), 'test.png')
 
