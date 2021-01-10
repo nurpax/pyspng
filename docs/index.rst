@@ -1,9 +1,10 @@
-pyspng Documentation
-====================
-
-Contents:
+******
+pyspng
+******
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    pyspng
+
+.. mdinclude:: ../README.md

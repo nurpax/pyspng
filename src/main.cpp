@@ -58,8 +58,8 @@ py::array_t<uint8_t> load_png(py::bytes png_bits) {
 
 PYBIND11_MODULE(pyspng, m) {
     m.doc() = R"pbdoc(
-        pyspng PNG loader
-        -----------------------
+        pyspng API reference
+        --------------------
 
         .. currentmodule:: pyspng
 
@@ -69,10 +69,14 @@ PYBIND11_MODULE(pyspng, m) {
            load_png
     )pbdoc";
 
-    m.def("load_png", &load_png, R"pbdoc(
-        Load PNG from a python bytes object.  Return as an np.array.
+    m.def("load_png", &load_png, py::arg("data"), R"pbdoc(
+        Load PNG from a python `bytes` object..
 
-        Foo.
+        Args:
+            data (bytes): PNG file contents in memory.
+        Returns:
+            numpy.ndarray: Image pixel data in shape (height,width,3).
+
     )pbdoc");
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

@@ -3,9 +3,14 @@ from setuptools import setup
 # Available at setup time due to pyproject.toml
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 
+import os
 import sys
 
-__version__ = "0.0.3"
+__version__ = "0.0.4"
+
+proj_root = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(proj_root, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 # Note:
 #   Sort input source files if you glob sources to ensure bit-for-bit
@@ -29,8 +34,9 @@ setup(
     author="Janne Hellsten",
     author_email="jjhellst@gmail.com",
     url="https://github.com/nurpax/pyspng", # TODO
-    description="Minimal binding for libspng",
-    long_description="",
+    description="Fast libspng-based PNG decoder",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     ext_modules=ext_modules,
     extras_require={"test": "pytest"},
     install_requires=[
