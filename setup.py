@@ -35,6 +35,10 @@ setup(
     author_email="jjhellst@gmail.com",
     url="https://github.com/nurpax/pyspng", # TODO
     description="Fast libspng-based PNG decoder",
+    project_urls={
+        'Documentation': 'https://pyspng.readthedocs.io/',
+        'Tracker': 'https://github.com/nurpax/pyspng/issues',
+    },
     long_description=long_description,
     long_description_content_type='text/markdown',
     ext_modules=ext_modules,
