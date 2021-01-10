@@ -20,7 +20,6 @@ ext_modules = [
         include_dirs=['src/libspng-0.6.1', zlib_dir],
         # Example: passing in the version to the compiled code
         define_macros = [('VERSION_INFO', __version__)],
-        libraries=['z'],
     ),
 ]
 
