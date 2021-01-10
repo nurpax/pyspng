@@ -2,10 +2,18 @@
 
 import numpy as np
 import pyspng as m
+import PIL.Image
 
 assert m.__version__ == '0.0.1'
 
-with open('test.png', 'rb') as fin:
-    f = m.load_png(fin.read())
-    print (f.shape)
-    print (f)
+fname = 'test.png'
+with open(fname, 'rb') as fin:
+    sarr = m.load_png(fin.read())
+    print (sarr.shape)
+
+img = PIL.Image.open(fname).convert('RGB')
+pil_arr = np.array(img)
+
+# Match that loading the same image with PIL.Image produces
+# the same bits.
+assert np.all((sarr - pil_arr) == 0)
