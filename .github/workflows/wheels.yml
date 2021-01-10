@@ -14,6 +14,8 @@ env:
 # TODO pillow couldn't be installed due to missing libz -- disabling for now.
 #  CIBW_TEST_REQUIRES: pillow
   CIBW_TEST_COMMAND: python {project}/tests/test.py
+  # Don't build for Python 2.7
+  CIBW_SKIP: cp27-* pp27-*
 
 
 jobs:
@@ -57,9 +59,6 @@ jobs:
 
     - name: Build wheel
       run: python -m cibuildwheel --output-dir wheelhouse
-      env:
-        # Don't build for Python 2.7
-        CIBW_SKIP: cp27-*
 
     - name: Show files
       run: ls -lh wheelhouse
