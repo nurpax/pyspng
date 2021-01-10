@@ -12,7 +12,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest, windows-latest, macos-latest]
+        # TODO macos-latest
+        platform: [ubuntu-latest, windows-latest]
         python-version: ["3.6", "3.8"]
 
     runs-on: ${{ matrix.platform }}
@@ -30,7 +31,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           channels: conda-forge
-          
+
       - name: Prepare
         run: conda install conda-build conda-verify
 
