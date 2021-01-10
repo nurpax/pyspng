@@ -38,7 +38,7 @@ jobs:
         run: conda build conda.recipe
 
       - name: Install
-        run: conda install -c ${CONDA_PREFIX}/conda-bld/ python_example
+        run: conda install -c ${CONDA_PREFIX}/conda-bld/ pyspng
 
       - name: Test
         run: python tests/test.py

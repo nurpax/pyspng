@@ -46,5 +46,8 @@ jobs:
     - name: Build and install
       run: pip install --verbose .
 
+    - name: Test deps
+      run: pip install pillow
+
     - name: Test
       run: python tests/test.py
