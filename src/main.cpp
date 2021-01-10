@@ -1,7 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
-#include "libspng-0.6.1/spng/spng.h"
+#include "spng/spng.h"
 
 namespace py = pybind11;
 

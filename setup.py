@@ -7,18 +7,17 @@ import sys
 
 __version__ = "0.0.1"
 
-# The main interface is through Pybind11Extension.
-# * You can add cxx_std=11/14/17, and then build_ext can be removed.
-# * You can set include_pybind11=false to add the include directory yourself,
-#   say from a submodule.
-#
 # Note:
 #   Sort input source files if you glob sources to ensure bit-for-bit
 #   reproducible builds (https://github.com/pybind/python_example/pull/53)
 
+zlib_dir = 'src/zlib-1.2.11/'
+zlib_sources = [zlib_dir + fn for fn in ['adler32.c', 'compress.c', 'crc32.c', 'deflate.c', 'gzclose.c', 'gzlib.c', 'gzread.c', 'gzwrite.c', 'infback.c', 'inffast.c', 'inflate.c', 'inftrees.c', 'trees.c', 'uncompr.c', 'zutil.c']]
+
 ext_modules = [
     Pybind11Extension("pyspng",
-        ["src/libspng-0.6.1/spng/spng.c", "src/main.cpp"],
+        ["src/main.cpp", "src/libspng-0.6.1/spng/spng.c"] + zlib_sources,
+        include_dirs=['src/libspng-0.6.1', zlib_dir],
         # Example: passing in the version to the compiled code
         define_macros = [('VERSION_INFO', __version__)],
         libraries=['z'],
