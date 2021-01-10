@@ -17,3 +17,8 @@ pil_arr = np.array(img)
 # Match that loading the same image with PIL.Image produces
 # the same bits.
 assert np.all((sarr - pil_arr) == 0)
+
+try:
+    m.load_png(b'this is not a png')
+except Exception as e:
+    print (str(e))

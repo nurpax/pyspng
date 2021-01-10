@@ -2,7 +2,6 @@ from setuptools import setup
 
 # Available at setup time due to pyproject.toml
 from pybind11.setup_helpers import Pybind11Extension, build_ext
-from pybind11 import get_cmake_dir
 
 import sys
 
