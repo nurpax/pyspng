@@ -8,11 +8,7 @@ namespace py = pybind11;
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
-int add(int i, int j) {
-    return i + j;
-}
-
-py::array_t<uint8_t> nptest(py::bytes png_bits) {
+py::array_t<uint8_t> load_png(py::bytes png_bits) {
     spng_ctx *ctx = spng_ctx_new(0);
 
     /* Ignore and don't calculate chunk CRC's */
@@ -28,16 +24,13 @@ py::array_t<uint8_t> nptest(py::bytes png_bits) {
     spng_set_png_buffer(ctx, bits.data(), bits.length());
 
     struct spng_ihdr ihdr;
-
     if (spng_get_ihdr(ctx, &ihdr)) {
         return py::array_t<uint8_t>(); // TODO ERRORS
     }
 
-    //-------------------------------------------------------------------
     int w = ihdr.width;
     int h = ihdr.height;
     int c = 3;
-
     int out_fmt = SPNG_FMT_RGB8;
     size_t out_size;
     if (spng_decoded_image_size(ctx, out_fmt, &out_size)) {
@@ -66,7 +59,9 @@ py::array_t<uint8_t> nptest(py::bytes png_bits) {
 namespace py = pybind11;
 
 PYBIND11_MODULE(pyspng, m) {
-    m.def("nptest", &nptest, R"pbdoc(Foo)pbdoc");
+    m.def("load_png", &load_png, R"pbdoc(
+    Load PNG from a python `bytes` object.  Return as an `np.array`.
+    )pbdoc");
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
 #else
