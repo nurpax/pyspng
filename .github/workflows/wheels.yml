@@ -53,14 +53,13 @@ jobs:
     - uses: actions/setup-python@v2
 
     - name: Install cibuildwheel
-      run: python -m pip install cibuildwheel==1.6.3
+      run: python -m pip install cibuildwheel==1.7.4
 
     - name: Build wheel
       run: python -m cibuildwheel --output-dir wheelhouse
       env:
-        # Python 2.7 on Windows requires a workaround for C++11 support,
-        # built separately below
-        CIBW_SKIP: cp27-win*
+        # Don't build for Python 2.7
+        CIBW_SKIP: cp27-*
 
     - name: Show files
       run: ls -lh wheelhouse
