@@ -16,13 +16,13 @@ with open(os.path.join(proj_root, 'README.md'), encoding='utf-8') as f:
 #   Sort input source files if you glob sources to ensure bit-for-bit
 #   reproducible builds (https://github.com/pybind/python_example/pull/53)
 
-zlib_dir = 'src/zlib-1.2.11/'
+zlib_dir = 'vendor/zlib-1.2.11/'
 zlib_sources = [zlib_dir + fn for fn in ['adler32.c', 'compress.c', 'crc32.c', 'deflate.c', 'gzclose.c', 'gzlib.c', 'gzread.c', 'gzwrite.c', 'infback.c', 'inffast.c', 'inflate.c', 'inftrees.c', 'trees.c', 'uncompr.c', 'zutil.c']]
 
 ext_modules = [
     Pybind11Extension("pyspng",
-        ["src/main.cpp", "src/libspng-0.6.1/spng/spng.c"] + zlib_sources,
-        include_dirs=['src/libspng-0.6.1', zlib_dir],
+        ["src/main.cpp", "vendor/libspng-0.6.1/spng/spng.c"] + zlib_sources,
+        include_dirs=['vendor/libspng-0.6.1', zlib_dir],
         # Example: passing in the version to the compiled code
         define_macros = [('VERSION_INFO', __version__)],
     ),
