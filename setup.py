@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # Available at setup time due to pyproject.toml
 from pybind11.setup_helpers import Pybind11Extension, build_ext
@@ -20,8 +20,8 @@ zlib_dir = 'vendor/zlib-1.2.11/'
 zlib_sources = [zlib_dir + fn for fn in ['adler32.c', 'compress.c', 'crc32.c', 'deflate.c', 'gzclose.c', 'gzlib.c', 'gzread.c', 'gzwrite.c', 'infback.c', 'inffast.c', 'inflate.c', 'inftrees.c', 'trees.c', 'uncompr.c', 'zutil.c']]
 
 ext_modules = [
-    Pybind11Extension("pyspng",
-        ["src/main.cpp", "vendor/libspng-0.6.1/spng/spng.c"] + zlib_sources,
+    Pybind11Extension("_pyspng_c",
+        ["pyspng/main.cpp", "vendor/libspng-0.6.1/spng/spng.c"] + zlib_sources,
         include_dirs=['vendor/libspng-0.6.1', zlib_dir],
         # Example: passing in the version to the compiled code
         define_macros = [('VERSION_INFO', __version__)],
@@ -42,6 +42,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     ext_modules=ext_modules,
+    packages=['pyspng'],
     extras_require={"test": "pytest"},
     install_requires=[
         'numpy',

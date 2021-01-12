@@ -24,7 +24,7 @@ def ref_compare(fn, spngarr):
 
 with open(fname, 'rb') as fin:
     sarr = m.load_png(fin.read())
-    print (sarr.shape)
+    print ('shape:', sarr.shape, 'dtype:', sarr.dtype)
     ref_compare(fname, sarr)
 
 try:
