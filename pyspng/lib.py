@@ -17,9 +17,25 @@ __version__ = c.__version__
 
 def load(data: bytes, format: Optional[str] = None) -> np.ndarray:
     """
+    Load a PNG from a bytes object and return the image data as
+    a np.ndarray.
+
+    The output `format`, if specified, can be one of "L", "LA", "RGB", "RGBA".
+    If left unspecified, automatically determine it by looking at the PNG ihdr
+    block.
+
     Args:
         data (bytes): PNG data
-        format (:obj:`str`, optional): Output channel format.  Auto-detect if None.
+        format (str, optional): Output pixel format.  Auto-detect if None.
+
+    Returns:
+        numpy.ndarray: Image data as a numpy array.
+
+        The resulting array will have shape `[height,width,channels]` if channels > 1,
+        or `[height,width]` for grayscale images.
+
+        The array dtype is either :obj:`np.uint8` or :obj:`np.uint16`, depending the desired
+        output `format`, or if unspecified, depending on PNG contents.
     """
     # TODO 16 bit variants?
     cfmts = {

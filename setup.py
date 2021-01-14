@@ -6,7 +6,7 @@ from pybind11.setup_helpers import Pybind11Extension, build_ext
 import os
 import sys
 
-__version__ = "0.0.4"
+__version__ = "0.1.0"
 
 proj_root = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(proj_root, 'README.md'), encoding='utf-8') as f:

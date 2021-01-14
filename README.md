@@ -1,6 +1,6 @@
 
-**Pyspng** is a small library to load PNG files into numpy arrays.  Unlike many other
-popular Python image libraries, pyspng does not offer any image manipulation functionality.
+**Pyspng** is a small library to for efficiently loading PNG files to numpy arrays.
+Pyspng does not offer any image manipulation functionality.
 
 Pyspng was originally written to speed up loading uncompressed (PNG compression level 0),
 making the PNG file format more suitable to be used in machine learning datasets.  Pyspng
@@ -15,7 +15,7 @@ import numpy as np
 import pyspng
 
 with open('test.png', 'rb') as fin:
-    nparr = pyspng.load_png(fin.read())
+    nparr = pyspng.load(fin.read())
 ```
 
 ## Installation
