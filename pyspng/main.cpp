@@ -81,6 +81,7 @@ PYBIND11_MODULE(_pyspng_c, m) {
     )pbdoc";
 
     py::enum_<spng_format>(m, "spng_format")
+        .value("SPNG_FMT_AUTO",   (spng_format)0) // Note: not a libspng enum value
         .value("SPNG_FMT_RGBA8",  SPNG_FMT_RGBA8)
         .value("SPNG_FMT_RGBA16", SPNG_FMT_RGBA16)
         .value("SPNG_FMT_RGB8",   SPNG_FMT_RGB8)
@@ -92,9 +93,14 @@ PYBIND11_MODULE(_pyspng_c, m) {
     m.def("spng_decode_image_bytes", &decode_image_bytes, py::arg("data"), py::arg("fmt"), R"pbdoc(
         Decode PNG bytes into a numpy array.
 
+        Note:
+            Single-channel data is returned with shape [h,w,1] instead of [h,w] for
+            simplicity.  Use `arr[:,:,0]` to drop the extra dimension if you want
+            PIL.Image compatible shapes.
+
         Args:
             data (bytes): PNG file contents in memory.
-            fmt: Output format.
+            fmt: Output format.  SPNG_FMT_AUTO will auto-detect the output format based on PNG contents.
 
         Returns:
             numpy.ndarray: Image pixel data in shape (height, width, nc).
