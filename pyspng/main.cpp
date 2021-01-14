@@ -28,7 +28,31 @@ py::array decode_image_bytes(py::bytes png_bits, spng_format fmt) {
         throw std::runtime_error("pyspng: could not decode image size");
     }
 
-    // TODO decide SPNG_FMT based on ihdr
+    // Decide spng_format based on ihdr.
+    //
+    // Note: this is most likely buggy/incomplete for 16-bit formats.
+    if (fmt == 0) {
+        int o = (int)fmt;
+        switch (ihdr.color_type) {
+            case SPNG_COLOR_TYPE_GRAYSCALE:
+                // TODO no G16 output format? using alpha
+                fmt = ihdr.bit_depth <= 8 ? SPNG_FMT_G8 : SPNG_FMT_GA16;
+                break;
+            case SPNG_COLOR_TYPE_TRUECOLOR:
+                // TODO no RGB16 output format? using alpha
+                fmt = ihdr.bit_depth <= 8 ? SPNG_FMT_RGB8 : SPNG_FMT_RGBA16;
+                break;
+            case SPNG_COLOR_TYPE_INDEXED:
+                fmt = SPNG_FMT_RGB8;
+                break;
+            case SPNG_COLOR_TYPE_GRAYSCALE_ALPHA:
+                fmt = ihdr.bit_depth <= 8 ? SPNG_FMT_GA8 : SPNG_FMT_GA16;
+                break;
+            case SPNG_COLOR_TYPE_TRUECOLOR_ALPHA:
+                fmt = ihdr.bit_depth <= 8 ? SPNG_FMT_RGBA8 : SPNG_FMT_RGBA16;
+                break;
+        }
+    }
 
     int nc;
     int cs;
@@ -39,6 +63,7 @@ py::array decode_image_bytes(py::bytes png_bits, spng_format fmt) {
         case SPNG_FMT_GA8:      nc = 2; cs = 1; break;
         case SPNG_FMT_GA16:     nc = 2; cs = 2; break;
         case SPNG_FMT_G8:       nc = 1; cs = 1; break;
+        //case SPNG_FMT_G16:      nc = 1; cs = 2; break;
         default:
             throw std::runtime_error("pyspng: invalid output fmt");
     }

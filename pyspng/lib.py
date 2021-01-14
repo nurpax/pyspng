@@ -15,7 +15,7 @@ from typing import Optional
 
 __version__ = c.__version__
 
-def load(data: bytes, format: Optional[str]) -> np.ndarray:
+def load(data: bytes, format: Optional[str] = None) -> np.ndarray:
     """
     Args:
         data (bytes): PNG data

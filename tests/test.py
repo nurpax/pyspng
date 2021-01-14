@@ -40,8 +40,11 @@ def synthetic_test():
             # Load the saved PNG using pyspng by telling it what format to expect
             nparr = m.load(bytes, format=fmt)
             assert np.all(nparr == np.array(pil_img))
+
             # The same except let pyspng figure out the format
-            # TODO
+            nparr = m.load(bytes)
+            assert np.all(nparr == np.array(pil_img))
+
             print ('.', end='')
     print ('')
 
