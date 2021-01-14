@@ -14,6 +14,7 @@ def synthetic_test():
         import PIL.Image
     except:
         print ('Pillow not installed.  Skipping cross comparison test.')
+        return
 
     alphas = [0, 64, 192, 255]
     widths = [15, 16, 32, 64]
