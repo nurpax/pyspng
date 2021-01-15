@@ -24,15 +24,15 @@ py::array decode_image_bytes(py::bytes png_bits, spng_format fmt) {
     spng_set_png_buffer(ctx.get(), bits.data(), bits.length());
 
     struct spng_ihdr ihdr;
-    if (spng_get_ihdr(ctx.get(), &ihdr) != SPNG_OK) {
-        throw std::runtime_error("pyspng: could not decode image size");
+    int res;
+    if ((res = spng_get_ihdr(ctx.get(), &ihdr)) != SPNG_OK) {
+        throw std::runtime_error("pyspng: could not decode ihdr: " + std::string(spng_strerror(res)));
     }
 
     // Decide spng_format based on ihdr.
     //
     // Note: this is most likely buggy/incomplete for 16-bit formats.
     if (fmt == 0) {
-        int o = (int)fmt;
         switch (ihdr.color_type) {
             case SPNG_COLOR_TYPE_GRAYSCALE:
                 // TODO no G16 output format? using alpha
@@ -69,16 +69,16 @@ py::array decode_image_bytes(py::bytes png_bits, spng_format fmt) {
     }
     int w = ihdr.width;
     int h = ihdr.height;
-
     size_t out_size;
-    if (spng_decoded_image_size(ctx.get(), fmt, &out_size) != SPNG_OK) {
-        throw std::runtime_error("pyspng: could not decode image size");
+
+    if ((res = spng_decoded_image_size(ctx.get(), fmt, &out_size)) != SPNG_OK) {
+        throw std::runtime_error("pyspng: could not decode image size: " + std::string(spng_strerror(res)));
     }
 
     void* data = (void*)malloc(out_size);
-    if (spng_decode_image(ctx.get(), data, out_size, fmt, 0) != SPNG_OK) {
+    if ((res = spng_decode_image(ctx.get(), data, out_size, fmt, 0)) != SPNG_OK) {
         free(data);
-        throw std::runtime_error("pyspng: could not decode image");
+        throw std::runtime_error("pyspng: could not decode image: " + std::string(spng_strerror(res)));
     }
 
     py::capsule free_when_done(data, [](void *f) {

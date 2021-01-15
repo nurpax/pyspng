@@ -4,6 +4,7 @@ import os
 import io
 import itertools
 import pyspng as m
+import glob
 
 print ('pyspng version', m.__version__)
 
@@ -49,6 +50,41 @@ def synthetic_test():
             print ('.', end='')
     print ('')
 
+def test_image_files():
+    '''Test that pyspng.load() works the same way as PIL.Image.open().'''
+
+    try:
+        import PIL.Image
+    except:
+        print ('Pillow not installed.  Skipping png file cross comparison test.')
+        return
+
+    pngs = sorted(glob.glob(os.path.join(os.path.dirname(__file__), 'img/*.png')))
+    print ('testing image files', end='')
+    for fname in pngs:
+
+        # Test in RGBA
+        pil_img = PIL.Image.open(fname)
+        expected_spng_fmt = None
+        if pil_img.mode == 'P':
+            pil_img = pil_img.convert('RGB')
+            expected_spng_fmt = 'RGB'
+        else:
+            assert False, 'unimplemented'
+
+        with open(fname, 'rb') as fp:
+            png_bytes = fp.read()
+
+        spng_arr_auto = m.load(png_bytes)
+        spng_arr_expl = m.load(png_bytes, expected_spng_fmt)
+
+        assert np.all(np.array(pil_img) == spng_arr_auto)
+        assert np.all(np.array(pil_img) == spng_arr_expl)
+
+        print ('.', end='')
+    print ('')
+
+
 def ref_compare(fn, spngarr):
     try:
         import PIL.Image
@@ -71,8 +107,9 @@ with open(fname, 'rb') as fin:
 try:
     m.load(b'this is not a png', 'RGB')
 except Exception as e:
-    assert 'could not decode image size' in str(e)
+    assert 'could not decode ihdr' in str(e)
 
 synthetic_test()
+test_image_files()
 
 print ('All tests ok.')
