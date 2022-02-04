@@ -21,7 +21,7 @@ zlib_sources = [zlib_dir + fn for fn in ['adler32.c', 'compress.c', 'crc32.c', '
 
 ext_modules = [
     Pybind11Extension("_pyspng_c",
-        ["pyspng/main.cpp", "vendor/libspng-0.7.1/spng/spng.c"] + zlib_sources,
+        ["pyspng/main.cpp", "vendor/libspng-0.7.1/spng.c"] + zlib_sources,
         include_dirs=['vendor/libspng-0.7.1', zlib_dir],
         # Example: passing in the version to the compiled code
         define_macros = [('VERSION_INFO', __version__)],
