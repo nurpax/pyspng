@@ -9,7 +9,6 @@ spng: ${SPNGDIR}/spng.c ${MINIZDIR}/miniz.c
 		-stdlib=libc++ -mmacosx-version-min=10.9 \
 		-I${SPNGDIR} -I${MINIZDIR} libspng-0.7.1/spng.c miniz-2.2.0/miniz.c
 	ar rcs libspng.a spng.o miniz.o
-# 	libtool -static -o spng.a spng.o miniz.o
 	rm *.o
 
 clean:
