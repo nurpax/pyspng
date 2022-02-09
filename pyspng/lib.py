@@ -15,6 +15,28 @@ from typing import Optional
 
 __version__ = c.__version__
 
+def encode(image) -> bytes:
+    """
+    Encode a Numpy array into a PNG bytestream.
+
+    Note:
+        If present, the third index is used to represent the channel.
+        Number of channels correspond to:
+            1: Grayscale
+            2: Grayscale + Alpha Channel
+            3: RGB
+            4: RGBA
+
+        The maximum width and heights are 2^31-1.
+
+    Args:
+        image (numpy.ndarray): A 2D image potentially with multiple channels.
+
+    Returns:
+        bytes: A valid PNG bytestream.
+    """
+    return c.spng_encode_image(image)
+
 def load(data: bytes, format: Optional[str] = None) -> np.ndarray:
     """
     Load a PNG from a bytes object and return the image data as

@@ -10,6 +10,12 @@ print ('pyspng version', m.__version__)
 
 fname = os.path.join(os.path.dirname(__file__), 'test.png')
 
+def encode_test():
+    img = np.random.randint(0,255, size=(100,100)).astype(np.uint8)
+    png = m.encode(img)
+    recovered = m.load(png)
+    assert np.all(img == recovered)
+
 def synthetic_test():
     try:
         import PIL.Image
@@ -109,6 +115,7 @@ try:
 except Exception as e:
     assert 'could not decode ihdr' in str(e)
 
+encode_test()
 synthetic_test()
 test_image_files()
 

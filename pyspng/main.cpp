@@ -24,7 +24,7 @@ py::bytes encode_image(py::array image) {
             case 2: color_type = SPNG_COLOR_TYPE_GRAYSCALE_ALPHA; break;
             case 3: color_type = SPNG_COLOR_TYPE_TRUECOLOR; break;
             case 4: color_type = SPNG_COLOR_TYPE_TRUECOLOR_ALPHA; break;
-            default: throw new std::runtime_error("Too many channels in image.");
+            default: throw new std::runtime_error("pyspng: Too many channels in image.");
         }
     }
 
@@ -50,6 +50,12 @@ py::bytes encode_image(py::array image) {
     char *pngbuffer = static_cast<char*>(
         spng_get_png_buffer(ctx.get(), &png_size, &error)
     );
+
+    if (error) {
+        free(pngbuffer);
+        std::string errstr(spng_strerror(error));
+        throw new std::runtime_error(errstr);
+    }
 
     std::string outbytes(pngbuffer, png_size);
     free(pngbuffer);
@@ -150,6 +156,7 @@ PYBIND11_MODULE(_pyspng_c, m) {
            :toctree: _generate
 
            spng_format
+           spng_encode_image
            spng_decode_image_bytes
     )pbdoc";
 
@@ -162,6 +169,26 @@ PYBIND11_MODULE(_pyspng_c, m) {
         .value("SPNG_FMT_GA16",   SPNG_FMT_GA16)
         .value("SPNG_FMT_G8",     SPNG_FMT_G8)
         .export_values();
+
+    m.def("spng_encode_image", &encode_image, py::arg("image"), R"pbdoc(
+        Encode a Numpy array into a PNG bytestream.
+
+        Note:
+            If present, the third index is used to represent the channel.
+            Number of channels correspond to:
+                1: Grayscale
+                2: Grayscale + Alpha Channel
+                3: RGB
+                4: RGBA
+
+            The maximum width and heights are 2^31-1.
+
+        Args:
+            image (numpy.ndarray): A 2D image potentially with multiple channels.
+
+        Returns:
+            bytes: A valid PNG bytestream.
+    )pbdoc");
 
     m.def("spng_decode_image_bytes", &decode_image_bytes, py::arg("data"), py::arg("fmt"), R"pbdoc(
         Decode PNG bytes into a numpy array.
