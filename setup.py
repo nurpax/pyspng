@@ -1,10 +1,11 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 
 # Available at setup time due to pyproject.toml
-from pybind11.setup_helpers import Pybind11Extension, build_ext
+import pybind11
 
 import os
 import sys
+import subprocess
 
 __version__ = "0.1.0"
 
@@ -12,21 +13,48 @@ proj_root = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(proj_root, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-# Note:
-#   Sort input source files if you glob sources to ensure bit-for-bit
-#   reproducible builds (https://github.com/pybind/python_example/pull/53)
+vendor_dir = "./vendor"
+spng_dir = f'{vendor_dir}/libspng-0.7.1'
+miniz_dir = f'{vendor_dir}/miniz-2.2.0'
 
-zlib_dir = 'vendor/zlib-1.2.11/'
-zlib_sources = [zlib_dir + fn for fn in ['adler32.c', 'compress.c', 'crc32.c', 'deflate.c', 'gzclose.c', 'gzlib.c', 'gzread.c', 'gzwrite.c', 'infback.c', 'inffast.c', 'inflate.c', 'inftrees.c', 'trees.c', 'uncompr.c', 'zutil.c']]
+extra_compile_args = []
+if sys.platform == 'win32':
+  extra_compile_args += [
+    '/std:c++11', '/O2'
+  ]
+else:
+  extra_compile_args += [
+    '-std=c++11', '-O3',
+  ]
 
-ext_modules = [
-    Pybind11Extension("_pyspng_c",
-        ["pyspng/main.cpp", "vendor/libspng-0.6.1/spng/spng.c"] + zlib_sources,
-        include_dirs=['vendor/libspng-0.6.1', zlib_dir],
+# MacOS doesn't like compiling C and C++ files together, so use
+# make to build a staticly linked spng.a library.
+if sys.platform == 'darwin':
+  extra_compile_args += [ '-stdlib=libc++', '-mmacosx-version-min=10.9' ]
+  subprocess.run("make", cwd=vendor_dir)
+  ext_modules = [
+    Extension("_pyspng_c",
+        ["pyspng/main.cpp",],
+        include_dirs=[ spng_dir, pybind11.get_include() ],
+        extra_link_args=['-lspng',],
+        library_dirs=[ vendor_dir ],
         # Example: passing in the version to the compiled code
         define_macros = [('VERSION_INFO', __version__)],
+        language="c++",
+        extra_compile_args=[ "-std=c++14", "-O3" ],
     ),
-]
+  ]
+else:
+    extra_compile_args += [ "-DMINIZ_NO_STDIO=1", "-DSPNG_USE_MINIZ=1" ]
+    ext_modules = [
+        Extension("_pyspng_c",
+            [ "pyspng/main.cpp", f"{miniz_dir}/miniz.c", f"{spng_dir}/spng/spng.c" ],
+            include_dirs=[ spng_dir, miniz_dir, pybind11.get_include() ],
+            # Example: passing in the version to the compiled code
+            define_macros = [('VERSION_INFO', __version__)],
+            extra_compile_args=extra_compile_args,
+        ),
+    ]
 
 setup(
     name="pyspng",
@@ -47,8 +75,5 @@ setup(
     install_requires=[
         'numpy',
     ],
-    # Currently, build_ext only provides an optional "highest supported C++
-    # level" feature, but in the future it may provide more features.
-    cmdclass={"build_ext": build_ext},
     zip_safe=False,
 )
