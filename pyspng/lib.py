@@ -15,7 +15,7 @@ from typing import Optional
 
 __version__ = c.__version__
 
-def encode(image) -> bytes:
+def encode(image: np.ndarray, interlace:bool = False) -> bytes:
     """
     Encode a Numpy array into a PNG bytestream.
 
@@ -31,11 +31,11 @@ def encode(image) -> bytes:
 
     Args:
         image (numpy.ndarray): A 2D image potentially with multiple channels.
-
+        interlace (bool): generate a progressive PNG with ADAM7 interlacing. 
     Returns:
         bytes: A valid PNG bytestream.
     """
-    return c.spng_encode_image(image)
+    return c.spng_encode_image(image, interlace)
 
 def load(data: bytes, format: Optional[str] = None) -> np.ndarray:
     """

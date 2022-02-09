@@ -12,9 +12,11 @@ fname = os.path.join(os.path.dirname(__file__), 'test.png')
 
 def encode_test():
     img = np.random.randint(0,255, size=(100,100)).astype(np.uint8)
-    png = m.encode(img)
-    recovered = m.load(png)
-    assert np.all(img == recovered)
+    for interlace in (True, False):
+        png = m.encode(img, interlace=interlace)
+        recovered = m.load(png)
+        assert np.all(img == recovered)
+        print('.', end='')
 
 def synthetic_test():
     try:
@@ -25,7 +27,7 @@ def synthetic_test():
 
     alphas = [0, 64, 192, 255]
     widths = [15, 16, 32, 64]
-    print ('testing', end='')
+
     for (w, h, a) in itertools.product(widths, widths, alphas):
         x, y, c = np.mgrid[:h, :w, :1]
         # RGB with alpha
@@ -115,6 +117,7 @@ try:
 except Exception as e:
     assert 'could not decode ihdr' in str(e)
 
+print ('testing', end='')
 encode_test()
 synthetic_test()
 test_image_files()

@@ -10,7 +10,7 @@ namespace py = pybind11;
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
-py::bytes encode_image(py::array image) {
+py::bytes encode_image(py::array image, const bool interlace = false) {
     std::unique_ptr<spng_ctx, void(*)(spng_ctx*)> ctx(spng_ctx_new(SPNG_CTX_ENCODER), spng_ctx_free);
 
     spng_set_option(ctx.get(), SPNG_ENCODE_TO_BUFFER, 1);
@@ -32,7 +32,8 @@ py::bytes encode_image(py::array image) {
         .height = static_cast<uint32_t>(image.shape(1)),
         .width = static_cast<uint32_t>(image.shape(0)),
         .bit_depth = bit_depth,
-        .color_type = color_type
+        .color_type = color_type,
+        .interlace_method = static_cast<uint8_t>(interlace ? SPNG_INTERLACE_ADAM7 : SPNG_INTERLACE_NONE)
     };
     spng_set_ihdr(ctx.get(), &ihdr);
 
@@ -170,7 +171,7 @@ PYBIND11_MODULE(_pyspng_c, m) {
         .value("SPNG_FMT_G8",     SPNG_FMT_G8)
         .export_values();
 
-    m.def("spng_encode_image", &encode_image, py::arg("image"), R"pbdoc(
+    m.def("spng_encode_image", &encode_image, py::arg("image"), py::arg("interlace"), R"pbdoc(
         Encode a Numpy array into a PNG bytestream.
 
         Note:
@@ -185,7 +186,7 @@ PYBIND11_MODULE(_pyspng_c, m) {
 
         Args:
             image (numpy.ndarray): A 2D image potentially with multiple channels.
-
+            interlace (bool): Generate a Progressive PNG with ADAM7 interlacing.
         Returns:
             bytes: A valid PNG bytestream.
     )pbdoc");
