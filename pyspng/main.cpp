@@ -1,5 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <string>
+#include <cstdint>
 
 #include "spng.h"
 
@@ -7,6 +9,52 @@ namespace py = pybind11;
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
+
+py::bytes encode_image(py::array image) {
+    std::unique_ptr<spng_ctx, void(*)(spng_ctx*)> ctx(spng_ctx_new(SPNG_CTX_ENCODER), spng_ctx_free);
+
+    spng_set_option(ctx.get(), SPNG_ENCODE_TO_BUFFER, 1);
+
+    uint8_t bit_depth = image.dtype().itemsize() * 8;
+    uint8_t color_type = SPNG_COLOR_TYPE_GRAYSCALE;
+
+    if (image.ndim() == 3) {
+        switch (image.shape(2)) {
+            case 1: color_type = SPNG_COLOR_TYPE_GRAYSCALE; break;
+            case 2: color_type = SPNG_COLOR_TYPE_GRAYSCALE_ALPHA; break;
+            case 3: color_type = SPNG_COLOR_TYPE_TRUECOLOR; break;
+            case 4: color_type = SPNG_COLOR_TYPE_TRUECOLOR_ALPHA; break;
+            default: throw new std::runtime_error("Too many channels in image.");
+        }
+    }
+
+    struct spng_ihdr ihdr = {
+        .height = static_cast<uint32_t>(image.shape(1)),
+        .width = static_cast<uint32_t>(image.shape(0)),
+        .bit_depth = bit_depth,
+        .color_type = color_type
+    };
+    spng_set_ihdr(ctx.get(), &ihdr);
+
+    /* SPNG_FMT_PNG is a special value that matches the format in ihdr,
+       SPNG_ENCODE_FINALIZE will finalize the PNG with the end-of-file marker */
+    spng_encode_image(ctx.get(), image.data(), image.nbytes(), SPNG_FMT_PNG, SPNG_ENCODE_FINALIZE);
+
+    size_t png_size = 0;
+    int error = 0;
+    /* PNG is written to an internal buffer by default */
+    // std::unique_ptr<unsigned char *> pngbuffer;
+    // pngbuffer = std::move(static_cast<unsigned char*>(
+    //     spng_get_png_buffer(ctx.get(), &png_size, &error)
+    // ));
+    char *pngbuffer = static_cast<char*>(
+        spng_get_png_buffer(ctx.get(), &png_size, &error)
+    );
+
+    std::string outbytes(pngbuffer, png_size);
+    free(pngbuffer);
+    return py::bytes(outbytes);
+}
 
 py::array decode_image_bytes(py::bytes png_bits, spng_format fmt) {
     std::unique_ptr<spng_ctx, void(*)(spng_ctx*)> ctx(spng_ctx_new(0),  spng_ctx_free);
