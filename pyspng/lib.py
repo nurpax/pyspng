@@ -10,12 +10,20 @@
 
 import _pyspng_c as c
 import numpy as np
-
+from enum import Enum
 from typing import Optional
 
 __version__ = c.__version__
 
-def encode(image: np.ndarray, interlace:bool = False) -> bytes:
+class ProgressiveMode(Enum):
+    NONE = 0
+    PROGRESSIVE = 1
+    INTERLACED = 2
+
+def encode(
+    image: np.ndarray, 
+    progressive:ProgressiveMode = ProgressiveMode.NONE 
+) -> bytes:
     """
     Encode a Numpy array into a PNG bytestream.
 
@@ -31,11 +39,16 @@ def encode(image: np.ndarray, interlace:bool = False) -> bytes:
 
     Args:
         image (numpy.ndarray): A 2D image potentially with multiple channels.
-        interlace (bool): generate a progressive PNG with ADAM7 interlacing. 
+        progressive (int): 
+            0: off, regular PNG
+            1: on, progressive PNG
+            2: on, interlaced progressive PNG
+
+            Use the ProgressiveMode enum class to make this more clear.
     Returns:
         bytes: A valid PNG bytestream.
     """
-    return c.spng_encode_image(image, interlace)
+    return c.spng_encode_image(image, progressive)
 
 def load(data: bytes, format: Optional[str] = None) -> np.ndarray:
     """

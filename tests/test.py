@@ -12,8 +12,8 @@ fname = os.path.join(os.path.dirname(__file__), 'test.png')
 
 def encode_test():
     img = np.random.randint(0,255, size=(100,100)).astype(np.uint8)
-    for interlace in (True, False):
-        png = m.encode(img, interlace=interlace)
+    for progressive in (0,1,2):
+        png = m.encode(img, progressive)
         recovered = m.load(png)
         assert np.all(img == recovered)
         print('.', end='')
