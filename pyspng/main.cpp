@@ -288,6 +288,7 @@ PYBIND11_MODULE(_pyspng_c, m) {
                 2: on, interlaced progressive PNG
 
                 Also see ProgressiveMode enum.
+            compress_level (int): 0-9 input to zlib/miniz
         Returns:
             bytes: A valid PNG bytestream.
     )pbdoc");
