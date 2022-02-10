@@ -37,6 +37,7 @@ def encode_benchmark(title='', content='noise', width=1024, height=1024, compres
         x, y, _c = np.mgrid[:height, :width, :1]
         img = np.concatenate([y * 255 / height, x * 255 / width, x * 0], axis=2).astype(np.uint8)
 
+    bytelen = 0
     lowest_ms = float('inf')
     for _repeat_idx in range(num_repeats):
         start_time = time.time()
@@ -44,11 +45,13 @@ def encode_benchmark(title='', content='noise', width=1024, height=1024, compres
             if loader == 'pil':
                 stream = io.BytesIO()
                 PIL.Image.fromarray(img, 'RGB').save(stream, format='png', compress_level=compress_level)
+                bytelen = len(stream.getvalue())
             if loader == 'spng':
-                pyspng.encode(img, compress_level=compress_level)
+                binary = pyspng.encode(img, compress_level=compress_level)
+                bytelen = len(binary)
         cur_ms = (time.time() - start_time) * 1e3
         lowest_ms = min(lowest_ms, cur_ms)
-    print(f'{title}  {lowest_ms:.2f}ms')
+    print(f'{title}  {lowest_ms:.2f}ms  {bytelen} bytes')
 
 if __name__ == "__main__":
     decode_benchmark('d: pil  compressed   noise   ', content='noise',    compress_level=9, loader='pil')
