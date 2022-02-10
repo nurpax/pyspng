@@ -21,7 +21,7 @@ def encode_test():
 def synthetic_test():
     try:
         import PIL.Image
-    except:
+    except ImportError:
         print ('Pillow not installed.  Skipping cross comparison test.')
         return
 
@@ -63,7 +63,7 @@ def test_image_files():
 
     try:
         import PIL.Image
-    except:
+    except ImportError:
         print ('Pillow not installed.  Skipping png file cross comparison test.')
         return
 
@@ -103,7 +103,7 @@ def ref_compare(fn, spngarr):
         # the same bits.
         assert np.all((spngarr - pil_arr) == 0)
         print ('PIL image compare ok.')
-    except:
+    except ImportError:
         print ('Skipping test.  PIL.Image not installed')
 
 
