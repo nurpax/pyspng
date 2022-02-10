@@ -182,8 +182,8 @@ py::array decode_image_bytes(py::bytes png_bits, spng_format fmt) {
         }
     }
 
-    int nc;
-    int cs;
+    int nc; // num columns
+    int cs; // channel stride
     switch (fmt) {
         case SPNG_FMT_RGBA8:    nc = 4; cs = 1; break;
         case SPNG_FMT_RGBA16:   nc = 4; cs = 2; break;
