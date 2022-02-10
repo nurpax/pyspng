@@ -10,12 +10,22 @@ loading uncompressed PNGs than the Python Pillow library.
 
 ## Example
 
-```
+```python
 import numpy as np
 import pyspng
+from pyspng import ProgressiveMode
 
 with open('test.png', 'rb') as fin:
     nparr = pyspng.load(fin.read())
+
+binary = pyspng.encode(
+    nparr,
+    # Options: NONE (0), PROGRESSIVE (1), INTERLACED (2)
+    progressive=ProgressiveMode.PROGRESSIVE, 
+    compress_level=6
+)
+with open('test.png', 'wb') as fout:
+    fout.write(binary)
 ```
 
 ## Installation

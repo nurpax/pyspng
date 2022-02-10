@@ -10,16 +10,46 @@ print ('pyspng version', m.__version__)
 
 fname = os.path.join(os.path.dirname(__file__), 'test.png')
 
-def synthetic_test():
+def encode_test():
+
+    widths = list(range(1,1024,101))
+    heights = list(range(1,1024,103))
+    channels = [1,2,3,4]
+    dtypes = [ np.uint8, np.uint16 ]
+    progressives = [0,1,2]
+
+    # channel, dtype tuples
+    unsupported = set([
+        (1, np.uint16),
+        (3, np.uint16),
+    ])
+
+    for width, height, channel, dtype, progressive in itertools.product(widths, heights, channels, dtypes, progressives):
+        if (channel, dtype) in unsupported:
+            continue
+        try:
+            img = np.random.randint(0,255, size=(width,height,channel)).astype(dtype)
+            png = m.encode(img, progressive)
+            recovered = m.load(png)
+            if recovered.ndim < 3:
+                recovered = recovered[..., np.newaxis]
+
+            assert np.all(img == recovered), f"{img.shape=}, {recovered.shape=}"
+            print('.', end='', flush=True)
+        except:
+            print(f"{width=}, {height=}, {channel=}, {dtype=}, {progressive=}", flush=True)
+            raise
+
+def synthetic_decode_test():
     try:
         import PIL.Image
-    except:
+    except ImportError:
         print ('Pillow not installed.  Skipping cross comparison test.')
         return
 
     alphas = [0, 64, 192, 255]
     widths = [15, 16, 32, 64]
-    print ('testing', end='')
+
     for (w, h, a) in itertools.product(widths, widths, alphas):
         x, y, c = np.mgrid[:h, :w, :1]
         # RGB with alpha
@@ -55,7 +85,7 @@ def test_image_files():
 
     try:
         import PIL.Image
-    except:
+    except ImportError:
         print ('Pillow not installed.  Skipping png file cross comparison test.')
         return
 
@@ -95,7 +125,7 @@ def ref_compare(fn, spngarr):
         # the same bits.
         assert np.all((spngarr - pil_arr) == 0)
         print ('PIL image compare ok.')
-    except:
+    except ImportError:
         print ('Skipping test.  PIL.Image not installed')
 
 
@@ -109,7 +139,10 @@ try:
 except Exception as e:
     assert 'could not decode ihdr' in str(e)
 
-synthetic_test()
+print ('testing encoding', end='')
+encode_test()
+print ('\ntesting decoding', end='')
+synthetic_decode_test()
 test_image_files()
 
 print ('All tests ok.')

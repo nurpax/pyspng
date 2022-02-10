@@ -1,12 +1,161 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <string>
+#include <cstdint>
 
-#include "spng/spng.h"
+#include "spng.h"
 
 namespace py = pybind11;
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
+
+enum ProgressiveMode {
+    PROGRESSIVE_MODE_NONE = 0,
+    PROGRESSIVE_MODE_PROGRESSIVE = 1,
+    PROGRESSIVE_MODE_INTERLACED = 2
+};
+
+template <typename T>
+void encode_progressive_image(
+    const std::unique_ptr<spng_ctx, void(*)(spng_ctx*)> &ctx,
+    const py::array &image,
+    const bool interlaced
+) {
+    spng_encode_image(
+        ctx.get(), image.data(), image.nbytes(), 
+        SPNG_FMT_PNG, SPNG_ENCODE_PROGRESSIVE
+    );
+
+    int error;
+    size_t width = image.shape(1);
+    size_t height = image.shape(0);
+    size_t num_channels = 1;
+
+    if (image.ndim() > 2) {
+        num_channels = image.shape(2);
+    }
+
+    struct spng_row_info row_info;
+    const T* imgptr = static_cast<const T*>(image.data());
+
+    if (interlaced) {
+        do {
+            error = spng_get_row_info(ctx.get(), &row_info);
+            if (error) {
+                break;
+            }
+
+            const T *row = imgptr + width * num_channels * row_info.row_num;
+            error = spng_encode_row(
+                ctx.get(), 
+                static_cast<const void *>(row), 
+                width * num_channels * sizeof(T)
+            );
+        } while (!error);
+    }
+    else {
+        for (size_t y = 0; y < height; y++) {
+            const T *row = imgptr + width * num_channels * y;
+            error = spng_encode_row(
+                ctx.get(), 
+                static_cast<const void *>(row), 
+                width * num_channels * sizeof(T)
+            );
+
+            if (error) { 
+                break;
+            }
+        }
+    }
+
+    if (error == SPNG_EOI) {
+        spng_encode_chunks(ctx.get());
+    }
+    else {
+        std::string errstr(spng_strerror(error));
+        throw new std::runtime_error(errstr);
+    }
+}
+
+py::bytes encode_image(
+    const py::array &image, 
+    const int progressive = PROGRESSIVE_MODE_NONE,
+    const int compress_level = 6
+) {
+    if (progressive < 0 || progressive > 2) {
+        throw new std::runtime_error("pyspng: Unsupported progressive mode option: " + std::to_string(progressive));
+    }
+
+    std::unique_ptr<spng_ctx, void(*)(spng_ctx*)> ctx(spng_ctx_new(SPNG_CTX_ENCODER), spng_ctx_free);
+
+    spng_set_option(ctx.get(), SPNG_ENCODE_TO_BUFFER, 1);
+    spng_set_option(ctx.get(), SPNG_IMG_COMPRESSION_LEVEL, compress_level);
+
+    uint8_t bit_depth = image.dtype().itemsize() * 8;
+    uint8_t color_type = SPNG_COLOR_TYPE_GRAYSCALE;
+
+    if (image.ndim() == 3) {
+        switch (image.shape(2)) {
+            case 1: color_type = SPNG_COLOR_TYPE_GRAYSCALE; break;
+            case 2: color_type = SPNG_COLOR_TYPE_GRAYSCALE_ALPHA; break;
+            case 3: color_type = SPNG_COLOR_TYPE_TRUECOLOR; break;
+            case 4: color_type = SPNG_COLOR_TYPE_TRUECOLOR_ALPHA; break;
+            default: throw new std::runtime_error("pyspng: Too many channels in image.");
+        }
+    } 
+
+    uint8_t interlace_method = (progressive == PROGRESSIVE_MODE_INTERLACED)
+        ? SPNG_INTERLACE_ADAM7 
+        : SPNG_INTERLACE_NONE;
+
+    struct spng_ihdr ihdr = {
+        .height = static_cast<uint32_t>(image.shape(0)),
+        .width = static_cast<uint32_t>(image.shape(1)),
+        .bit_depth = bit_depth,
+        .color_type = color_type,
+        .interlace_method = static_cast<uint8_t>(interlace_method)
+    };
+    spng_set_ihdr(ctx.get(), &ihdr);
+
+    /* SPNG_FMT_PNG is a special value that matches the format in ihdr,
+       SPNG_ENCODE_FINALIZE will finalize the PNG with the end-of-file marker */
+    if (progressive == PROGRESSIVE_MODE_NONE) {
+        spng_encode_image(ctx.get(), image.data(), image.nbytes(), SPNG_FMT_PNG, SPNG_ENCODE_FINALIZE);
+    }
+    else if (progressive == PROGRESSIVE_MODE_PROGRESSIVE || progressive == PROGRESSIVE_MODE_INTERLACED) {
+        if (bit_depth == 16) {
+            encode_progressive_image<uint16_t>(ctx, image, (progressive == PROGRESSIVE_MODE_INTERLACED));    
+        }
+        else {
+            encode_progressive_image<uint8_t>(ctx, image, (progressive == PROGRESSIVE_MODE_INTERLACED));
+        }
+    }
+    else {
+        throw new std::runtime_error("This should never happen.");
+    }
+
+    size_t png_size = 0;
+    int error = 0;
+    /* PNG is written to an internal buffer by default */
+    // std::unique_ptr<unsigned char *> pngbuffer;
+    // pngbuffer = std::move(static_cast<unsigned char*>(
+    //     spng_get_png_buffer(ctx.get(), &png_size, &error)
+    // ));
+    char *pngbuffer = static_cast<char*>(
+        spng_get_png_buffer(ctx.get(), &png_size, &error)
+    );
+
+    if (error) {
+        free(pngbuffer);
+        std::string errstr(spng_strerror(error));
+        throw new std::runtime_error(errstr);
+    }
+
+    std::string outbytes(pngbuffer, png_size);
+    free(pngbuffer);
+    return py::bytes(outbytes);
+}
 
 py::array decode_image_bytes(py::bytes png_bits, spng_format fmt) {
     std::unique_ptr<spng_ctx, void(*)(spng_ctx*)> ctx(spng_ctx_new(0),  spng_ctx_free);
@@ -54,8 +203,8 @@ py::array decode_image_bytes(py::bytes png_bits, spng_format fmt) {
         }
     }
 
-    int nc;
-    int cs;
+    int nc; // num columns
+    int cs; // channel stride
     switch (fmt) {
         case SPNG_FMT_RGBA8:    nc = 4; cs = 1; break;
         case SPNG_FMT_RGBA16:   nc = 4; cs = 2; break;
@@ -71,13 +220,13 @@ py::array decode_image_bytes(py::bytes png_bits, spng_format fmt) {
     int h = ihdr.height;
     size_t out_size;
 
-    if ((res = spng_decoded_image_size(ctx.get(), fmt, &out_size)) != SPNG_OK) {
+    if ((res = spng_decoded_image_size(ctx.get(), SPNG_FMT_PNG, &out_size)) != SPNG_OK) {
         throw std::runtime_error("pyspng: could not decode image size: " + std::string(spng_strerror(res)));
     }
 
     void* data = (void*)malloc(out_size);
-    if ((res = spng_decode_image(ctx.get(), data, out_size, fmt, 0)) != SPNG_OK) {
-        free(data);
+    if ((res = spng_decode_image(ctx.get(), data, out_size, SPNG_FMT_PNG, 0)) != SPNG_OK) {
+        free(data); 
         throw std::runtime_error("pyspng: could not decode image: " + std::string(spng_strerror(res)));
     }
 
@@ -102,6 +251,7 @@ PYBIND11_MODULE(_pyspng_c, m) {
            :toctree: _generate
 
            spng_format
+           spng_encode_image
            spng_decode_image_bytes
     )pbdoc";
 
@@ -114,6 +264,34 @@ PYBIND11_MODULE(_pyspng_c, m) {
         .value("SPNG_FMT_GA16",   SPNG_FMT_GA16)
         .value("SPNG_FMT_G8",     SPNG_FMT_G8)
         .export_values();
+
+    m.def("spng_encode_image", 
+        &encode_image, py::arg("image"), py::arg("progressive"), 
+        py::arg("compress_level"), R"pbdoc(
+        Encode a Numpy array into a PNG bytestream.
+
+        Note:
+            If present, the third index is used to represent the channel.
+            Number of channels correspond to:
+                1: Grayscale
+                2: Grayscale + Alpha Channel
+                3: RGB
+                4: RGBA
+
+            The maximum width and heights are 2^31-1.
+
+        Args:
+            image (numpy.ndarray): A 2D image potentially with multiple channels.
+            progressive (int): 
+                0: off, regular PNG
+                1: on, progressive PNG
+                2: on, interlaced progressive PNG
+
+                Also see ProgressiveMode enum.
+            compress_level (int): 0-9 input to zlib/miniz
+        Returns:
+            bytes: A valid PNG bytestream.
+    )pbdoc");
 
     m.def("spng_decode_image_bytes", &decode_image_bytes, py::arg("data"), py::arg("fmt"), R"pbdoc(
         Decode PNG bytes into a numpy array.
