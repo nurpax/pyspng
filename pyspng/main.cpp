@@ -71,7 +71,7 @@ void encode_progressive_image(
 }
 
 py::bytes encode_image(
-    py::array image, 
+    const py::array &image, 
     const int progressive = PROGRESSIVE_MODE_NONE
 ) {
     if (progressive < 0 || progressive > 2) {
