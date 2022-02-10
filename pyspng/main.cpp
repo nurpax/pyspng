@@ -72,7 +72,8 @@ void encode_progressive_image(
 
 py::bytes encode_image(
     const py::array &image, 
-    const int progressive = PROGRESSIVE_MODE_NONE
+    const int progressive = PROGRESSIVE_MODE_NONE,
+    const int compress_level = 6
 ) {
     if (progressive < 0 || progressive > 2) {
         throw new std::runtime_error("pyspng: Unsupported progressive mode option: " + std::to_string(progressive));
@@ -81,6 +82,7 @@ py::bytes encode_image(
     std::unique_ptr<spng_ctx, void(*)(spng_ctx*)> ctx(spng_ctx_new(SPNG_CTX_ENCODER), spng_ctx_free);
 
     spng_set_option(ctx.get(), SPNG_ENCODE_TO_BUFFER, 1);
+    spng_set_option(ctx.get(), SPNG_IMG_COMPRESSION_LEVEL, compress_level);
 
     uint8_t bit_depth = image.dtype().itemsize() * 8;
     uint8_t color_type = SPNG_COLOR_TYPE_GRAYSCALE;
@@ -255,7 +257,9 @@ PYBIND11_MODULE(_pyspng_c, m) {
         .value("SPNG_FMT_G8",     SPNG_FMT_G8)
         .export_values();
 
-    m.def("spng_encode_image", &encode_image, py::arg("image"), py::arg("progressive"), R"pbdoc(
+    m.def("spng_encode_image", 
+        &encode_image, py::arg("image"), py::arg("progressive"), 
+        py::arg("compress_level"), R"pbdoc(
         Encode a Numpy array into a PNG bytestream.
 
         Note:

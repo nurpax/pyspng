@@ -10,19 +10,20 @@
 
 import _pyspng_c as c
 import numpy as np
-from enum import Enum
+from enum import IntEnum
 from typing import Optional
 
 __version__ = c.__version__
 
-class ProgressiveMode(Enum):
+class ProgressiveMode(IntEnum):
     NONE = 0
     PROGRESSIVE = 1
     INTERLACED = 2
 
 def encode(
     image: np.ndarray, 
-    progressive:ProgressiveMode = ProgressiveMode.NONE 
+    progressive:ProgressiveMode = ProgressiveMode.NONE,
+    compress_level:int = 6
 ) -> bytes:
     """
     Encode a Numpy array into a PNG bytestream.
@@ -50,6 +51,8 @@ def encode(
     """
     if image.size == 0:
         raise ValueError("Cannot encode an empty PNG.")
+    if not (0 <= compress_level <= 9):
+        raise ValueError(f"compress_level must be between 0-9 inclusive. Got: {compress_level}")
 
     byte_width = np.dtype(image.dtype).itemsize
     kind = np.dtype(image.dtype).kind
@@ -72,7 +75,11 @@ def encode(
             f"See: https://github.com/randy408/libspng/blob/master/docs/decode.md#supported-format-flag-combinations"
         )
 
-    return c.spng_encode_image(np.ascontiguousarray(image), progressive)
+    return c.spng_encode_image(
+        np.ascontiguousarray(image), 
+        progressive, 
+        compress_level
+    )
 
 def load(data: bytes, format: Optional[str] = None) -> np.ndarray:
     """
