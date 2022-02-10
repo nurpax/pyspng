@@ -28,8 +28,13 @@ void encode_progressive_image(
     );
 
     int error;
-    size_t width = image.shape(0);
-    size_t height = image.shape(1);
+    size_t width = image.shape(1);
+    size_t height = image.shape(0);
+    size_t num_channels = 1;
+
+    if (image.ndim() > 2) {
+        num_channels = image.shape(2);
+    }
 
     struct spng_row_info row_info;
     const T* imgptr = static_cast<const T*>(image.data());
@@ -41,14 +46,14 @@ void encode_progressive_image(
                 break;
             }
 
-            const void *row = imgptr + width * row_info.row_num;
-            error = spng_encode_row(ctx.get(), row, width);
+            const T *row = imgptr + width * num_channels * row_info.row_num;
+            error = spng_encode_row(ctx.get(), static_cast<const void *>(row), width * num_channels);
         } while (!error);
     }
     else {
         for (size_t y = 0; y < height; y++) {
-            const void *row = imgptr + width * y;
-            error = spng_encode_row(ctx.get(), row, width);
+            const T *row = imgptr + width * num_channels * y;
+            error = spng_encode_row(ctx.get(), static_cast<const void *>(row), width * num_channels);
 
             if (error) { 
                 break;
@@ -95,8 +100,8 @@ py::bytes encode_image(
         : SPNG_INTERLACE_NONE;
 
     struct spng_ihdr ihdr = {
-        .height = static_cast<uint32_t>(image.shape(1)),
-        .width = static_cast<uint32_t>(image.shape(0)),
+        .height = static_cast<uint32_t>(image.shape(0)),
+        .width = static_cast<uint32_t>(image.shape(1)),
         .bit_depth = bit_depth,
         .color_type = color_type,
         .interlace_method = static_cast<uint8_t>(interlace_method)
@@ -265,7 +270,12 @@ PYBIND11_MODULE(_pyspng_c, m) {
 
         Args:
             image (numpy.ndarray): A 2D image potentially with multiple channels.
-            interlace (bool): Generate a Progressive PNG with ADAM7 interlacing.
+            progressive (int): 
+                0: off, regular PNG
+                1: on, progressive PNG
+                2: on, interlaced progressive PNG
+
+                Also see ProgressiveMode enum.
         Returns:
             bytes: A valid PNG bytestream.
     )pbdoc");

@@ -48,7 +48,31 @@ def encode(
     Returns:
         bytes: A valid PNG bytestream.
     """
-    return c.spng_encode_image(image, progressive)
+    if image.size == 0:
+        raise ValueError("Cannot encode an empty PNG.")
+
+    byte_width = np.dtype(image.dtype).itemsize
+    kind = np.dtype(image.dtype).kind
+    num_channels = 1 if image.ndim < 3 else image.shape[2]
+
+    if byte_width > 2 or kind != 'u':
+        raise TypeError(f"The PNG format only supports up to unsigned 16-bit integers. Got: {image.dtype}")
+
+    pair = (num_channels, byte_width)
+
+    # See: https://github.com/randy408/libspng/blob/master/docs/decode.md#supported-format-flag-combinations
+    unsupported = set([ 
+        (1, 2), # GA16
+        (3, 2), # RGB16
+    ])
+
+    if pair in unsupported:
+        raise TypeError(
+            f"This channel number and byte width are unsupported. byte_width: {byte_width} num_channels: {num_channels}"
+            f"See: https://github.com/randy408/libspng/blob/master/docs/decode.md#supported-format-flag-combinations"
+        )
+
+    return c.spng_encode_image(np.ascontiguousarray(image), progressive)
 
 def load(data: bytes, format: Optional[str] = None) -> np.ndarray:
     """

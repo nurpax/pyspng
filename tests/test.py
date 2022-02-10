@@ -11,14 +11,36 @@ print ('pyspng version', m.__version__)
 fname = os.path.join(os.path.dirname(__file__), 'test.png')
 
 def encode_test():
-    img = np.random.randint(0,255, size=(100,100)).astype(np.uint8)
-    for progressive in (0,1,2):
-        png = m.encode(img, progressive)
-        recovered = m.load(png)
-        assert np.all(img == recovered)
-        print('.', end='')
 
-def synthetic_test():
+    widths = list(range(1,1024,101))
+    heights = list(range(1,1024,103))
+    channels = [1,2,3,4]
+    dtypes = [ np.uint8, np.uint16 ]
+    progressives = [0,1,2]
+
+    # channel, dtype tuples
+    unsupported = set([
+        (1, np.uint16),
+        (3, np.uint16),
+    ])
+
+    for width, height, channel, dtype, progressive in itertools.product(widths, heights, channels, dtypes, progressives):
+        if (channel, dtype) in unsupported:
+            continue
+        try:
+            img = np.random.randint(0,255, size=(width,height,channel)).astype(dtype)
+            png = m.encode(img, progressive)
+            recovered = m.load(png)
+            if recovered.ndim < 3:
+                recovered = recovered[..., np.newaxis]
+
+            assert np.all(img == recovered), f"{img.shape=}, {recovered.shape=}"
+            print('.', end='', flush=True)
+        except:
+            print(f"{width=}, {height=}, {channel=}, {dtype=}, {progressive=}", flush=True)
+            raise
+
+def synthetic_decode_test():
     try:
         import PIL.Image
     except ImportError:
@@ -117,9 +139,10 @@ try:
 except Exception as e:
     assert 'could not decode ihdr' in str(e)
 
-print ('testing', end='')
+print ('testing encoding', end='')
 encode_test()
-synthetic_test()
+print ('\ntesting decoding', end='')
+synthetic_decode_test()
 test_image_files()
 
 print ('All tests ok.')
