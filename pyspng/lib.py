@@ -65,7 +65,7 @@ def encode(
 
     # See: https://github.com/randy408/libspng/blob/master/docs/decode.md#supported-format-flag-combinations
     unsupported = set([ 
-        (1, 2), # GA16
+        (1, 2), # G16
         (3, 2), # RGB16
     ])
 
