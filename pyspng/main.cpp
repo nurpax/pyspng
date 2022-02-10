@@ -16,6 +16,7 @@ enum ProgressiveMode {
     PROGRESSIVE_MODE_INTERLACED = 2
 };
 
+template <typename T>
 void encode_progressive_image(
     const std::unique_ptr<spng_ctx, void(*)(spng_ctx*)> &ctx,
     const py::array &image,
@@ -31,7 +32,7 @@ void encode_progressive_image(
     size_t height = image.shape(1);
 
     struct spng_row_info row_info;
-    const uint8_t* imgptr = static_cast<const uint8_t*>(image.data());
+    const T* imgptr = static_cast<const T*>(image.data());
 
     if (interlaced) {
         do {
@@ -108,7 +109,12 @@ py::bytes encode_image(
         spng_encode_image(ctx.get(), image.data(), image.nbytes(), SPNG_FMT_PNG, SPNG_ENCODE_FINALIZE);
     }
     else if (progressive == PROGRESSIVE_MODE_PROGRESSIVE || progressive == PROGRESSIVE_MODE_INTERLACED) {
-        encode_progressive_image(ctx, image, (progressive == PROGRESSIVE_MODE_INTERLACED));
+        if (bit_depth == 16) {
+            encode_progressive_image<uint16_t>(ctx, image, (progressive == PROGRESSIVE_MODE_INTERLACED));    
+        }
+        else {
+            encode_progressive_image<uint8_t>(ctx, image, (progressive == PROGRESSIVE_MODE_INTERLACED));
+        }
     }
     else {
         throw new std::runtime_error("This should never happen.");
