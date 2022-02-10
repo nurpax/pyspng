@@ -199,13 +199,13 @@ py::array decode_image_bytes(py::bytes png_bits, spng_format fmt) {
     int h = ihdr.height;
     size_t out_size;
 
-    if ((res = spng_decoded_image_size(ctx.get(), fmt, &out_size)) != SPNG_OK) {
+    if ((res = spng_decoded_image_size(ctx.get(), SPNG_FMT_PNG, &out_size)) != SPNG_OK) {
         throw std::runtime_error("pyspng: could not decode image size: " + std::string(spng_strerror(res)));
     }
 
     void* data = (void*)malloc(out_size);
-    if ((res = spng_decode_image(ctx.get(), data, out_size, fmt, 0)) != SPNG_OK) {
-        free(data);
+    if ((res = spng_decode_image(ctx.get(), data, out_size, SPNG_FMT_PNG, 0)) != SPNG_OK) {
+        free(data); 
         throw std::runtime_error("pyspng: could not decode image: " + std::string(spng_strerror(res)));
     }
 
