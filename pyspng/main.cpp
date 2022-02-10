@@ -47,13 +47,21 @@ void encode_progressive_image(
             }
 
             const T *row = imgptr + width * num_channels * row_info.row_num;
-            error = spng_encode_row(ctx.get(), static_cast<const void *>(row), width * num_channels);
+            error = spng_encode_row(
+                ctx.get(), 
+                static_cast<const void *>(row), 
+                width * num_channels * sizeof(T)
+            );
         } while (!error);
     }
     else {
         for (size_t y = 0; y < height; y++) {
             const T *row = imgptr + width * num_channels * y;
-            error = spng_encode_row(ctx.get(), static_cast<const void *>(row), width * num_channels);
+            error = spng_encode_row(
+                ctx.get(), 
+                static_cast<const void *>(row), 
+                width * num_channels * sizeof(T)
+            );
 
             if (error) { 
                 break;
