@@ -6,7 +6,7 @@ from pybind11.setup_helpers import Pybind11Extension, build_ext
 import os
 import sys
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 proj_root = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(proj_root, 'README.md'), encoding='utf-8') as f:
@@ -22,7 +22,7 @@ zlib_sources = [zlib_dir + fn for fn in ['adler32.c', 'compress.c', 'crc32.c', '
 ext_modules = [
     Pybind11Extension("_pyspng_c",
         ["pyspng/main.cpp", "vendor/libspng-0.6.1/spng/spng.c"] + zlib_sources,
-        include_dirs=['vendor/libspng-0.6.1', zlib_dir],
+        include_dirs=['vendor/libspng-0.6.1/spng', zlib_dir],
         # Example: passing in the version to the compiled code
         define_macros = [('VERSION_INFO', __version__)],
     ),

@@ -19,25 +19,25 @@ jobs:
         #
         # Not sure how to avoid setting -std=c++17 with pybind11.
         platform: [windows-latest, ubuntu-latest]
-        python-version: ["3.8", "3.9"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
 
     runs-on: ${{ matrix.platform }}
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Add requirements
-      run: python -m pip install --upgrade wheel setuptools
+      - name: Add requirements
+        run: python -m pip install --upgrade wheel setuptools
 
-    - name: Build and install
-      run: pip install --verbose .
+      - name: Build and install
+        run: pip install --verbose .
 
-    - name: Test deps
-      run: pip install pillow
+      - name: Test deps
+        run: pip install pillow
 
-    - name: Test
-      run: python tests/test.py
+      - name: Test
+        run: python tests/test.py
