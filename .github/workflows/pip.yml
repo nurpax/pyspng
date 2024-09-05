@@ -18,8 +18,8 @@ jobs:
         # error: invalid argument '-std=c++17' not allowed with 'C'
         #
         # Not sure how to avoid setting -std=c++17 with pybind11.
-        platform: [windows-latest, ubuntu-latest]
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        platform: [windows-latest, ubuntu-latest, macos-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
     runs-on: ${{ matrix.platform }}
 
