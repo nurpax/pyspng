@@ -115,6 +115,10 @@ PYBIND11_MODULE(_pyspng_c, m) {
         .value("SPNG_FMT_G8",     SPNG_FMT_G8)
         .export_values();
 
+    m.def("spng_version_string", &spng_version_string, R"pbdoc(
+        Return the libspng version.
+    )pbdoc");
+
     m.def("spng_decode_image_bytes", &decode_image_bytes, py::arg("data"), py::arg("fmt"), R"pbdoc(
         Decode PNG bytes into a numpy array.
 

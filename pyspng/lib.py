@@ -8,7 +8,7 @@
     load
 """
 
-import _pyspng_c as c
+from . import _pyspng_c as c
 import numpy as np
 
 from typing import Optional

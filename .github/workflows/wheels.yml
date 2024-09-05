@@ -11,81 +11,83 @@ on:
       - published
 
 env:
-  # TODO pillow couldn't be installed due to missing libz -- disabling for now.
-  #  CIBW_TEST_REQUIRES: pillow
   CIBW_TEST_COMMAND: python {project}/tests/test.py
-  # Don't build for Python 2.7.  Only build for CPython and skip 3.4-3.6 versions
-  CIBW_SKIP: cp27-* pp27-* pp3*-* cp34-* cp35-* cp36-*
+  CIBW_SKIP: cp27-* pp27-* pp3*-* cp36-* cp37-*
+  # CIBW_BUILD: cp312-*
 
 jobs:
-  build_sdist:
-    name: Build SDist
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-
-      - name: Install deps
-        run: python -m pip install twine build
-
-      - name: Build SDist
-        run: python -m build -s
-
-      - name: Check metadata
-        run: twine check dist/*
-
-      - uses: actions/upload-artifact@v2
-        with:
-          path: dist/*.tar.gz
-
   build_wheels:
-    name: Wheels on ${{ matrix.os }}
+    name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
-        # TODO macos-latest
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+        #os: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v3
+      # Used to host cibuildwheel
+      - uses: actions/setup-python@v5
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==2.11.2
+        run: python -m pip install cibuildwheel==2.20.0
 
-      - name: Build wheel
+      - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
+        # to supply options, put them in 'env', like:
+        # env:
+        #   CIBW_SOME_OPTION: value
 
-      - name: Show files
-        run: ls -lh wheelhouse
-        shell: bash
-
-      - name: Verify clean directory
-        run: git diff --exit-code
-        shell: bash
-
-      - name: Upload wheels
-        uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          path: wheelhouse/*.whl
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
 
-  upload_all:
-    name: Upload if release
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build sdist
+        run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-sdist
+          path: dist/*.tar.gz
+
+  upload_testpypi:
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'published'
-
+    environment: testpypi
+    permissions:
+      id-token: write
+    if: github.event_name == 'release' && github.event.action == 'published' && contains(github.event.release.tag_name, '-test')
     steps:
-      - uses: actions/setup-python@v2
-
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
-          name: artifact
+          pattern: cibw-*
           path: dist
+          merge-multiple: true
 
-      - uses: pypa/gh-action-pypi-publish@v1.4.1
+      - uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+
+  upload_pypi:
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    if: github.event_name == 'release' && github.event.action == 'published' && !contains(github.event.release.tag_name, '-test')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-*
+          path: dist
+          merge-multiple: true
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
