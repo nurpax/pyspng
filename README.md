@@ -27,6 +27,11 @@ pip install pyspng
 
 Note: binary wheels are built for Linux and Windows.  MacOS may not work out of the box.
 
+## Local Development
+
+1. Clone the git repo
+2. `cd pyspng && pip install .`
+
 ## License
 
 pyspng is provided under a BSD-style license that can be found in the LICENSE
