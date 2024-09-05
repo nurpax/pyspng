@@ -11,6 +11,7 @@ authors = [
   { name = "Janne Hellsten", email = "jjhellst@gmail.com" },
 ]
 requires-python = ">=3.7"
+dependencies = ["numpy"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "License :: OSI Approved :: MIT License",
@@ -23,7 +24,6 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-install = ["numpy"]
 test = ["pytest"]
 
 [tool.scikit-build]
