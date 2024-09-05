@@ -23,6 +23,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
+install = ["numpy"]
 test = ["pytest"]
 
 [tool.scikit-build]
