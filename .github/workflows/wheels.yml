@@ -39,37 +39,31 @@ jobs:
           path: dist/*.tar.gz
 
   build_wheels:
-    name: Wheels on ${{ matrix.os }}
+    name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
-        # TODO macos-latest
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
 
     steps:
       - uses: actions/checkout@v4
 
+      # Used to host cibuildwheel
       - uses: actions/setup-python@v5
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel==2.20.0
 
-      - name: Build wheel
+      - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
+        # to supply options, put them in 'env', like:
+        # env:
+        #   CIBW_SOME_OPTION: value
 
-      - name: Show files
-        run: ls -lh wheelhouse
-        shell: bash
-
-      - name: Verify clean directory
-        run: git diff --exit-code
-        shell: bash
-
-      - name: Upload wheels
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          path: wheelhouse/*.whl
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
 
   upload_all:
     name: Upload if release
