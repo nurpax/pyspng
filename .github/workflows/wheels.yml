@@ -11,8 +11,6 @@ on:
       - published
 
 env:
-  # TODO pillow couldn't be installed due to missing libz -- disabling for now.
-  #  CIBW_TEST_REQUIRES: pillow
   CIBW_TEST_COMMAND: python {project}/tests/test.py
   CIBW_SKIP: cp27-* pp27-* pp3*-* cp34-* cp35-* cp36-* cp37-*
   # DEBUG
@@ -24,8 +22,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # os: [ubuntu-latest, windows-latest, macos-13, macos-14]
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+        #os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
