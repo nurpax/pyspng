@@ -13,8 +13,7 @@ on:
 env:
   CIBW_TEST_COMMAND: python {project}/tests/test.py
   CIBW_SKIP: cp27-* pp27-* pp3*-* cp36-* cp37-*
-  # DEBUG
-  CIBW_BUILD: cp312-*
+  # CIBW_BUILD: cp312-*
 
 jobs:
   build_wheels:
