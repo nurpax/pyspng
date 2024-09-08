@@ -5,7 +5,10 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "pyspng"
 version = "0.1.2"
-description="Fast libspng-based PNG decoder"
+description = "Fast libspng-based PNG decoder"
+homepage = "https://github.com/nurpax/pyspng/"
+documentation = "https://pyspng.readthedocs.io/"
+issues = "https://github.com/nurpax/pyspng/issues"
 readme = "README.md"
 authors = [
   { name = "Janne Hellsten", email = "jjhellst@gmail.com" },
