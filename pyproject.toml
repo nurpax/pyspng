@@ -6,9 +6,6 @@ build-backend = "scikit_build_core.build"
 name = "pyspng"
 version = "0.1.2"
 description = "Fast libspng-based PNG decoder"
-homepage = "https://github.com/nurpax/pyspng/"
-documentation = "https://pyspng.readthedocs.io/"
-issues = "https://github.com/nurpax/pyspng/issues"
 readme = "README.md"
 authors = [
   { name = "Janne Hellsten", email = "jjhellst@gmail.com" },
@@ -25,6 +22,11 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
 ]
+
+[project.urls]
+Homepage = "https://github.com/nurpax/pyspng/"
+Documentation = "https://pyspng.readthedocs.io/"
+Issues = "https://github.com/nurpax/pyspng/issues"
 
 [project.optional-dependencies]
 test = ["pytest"]
