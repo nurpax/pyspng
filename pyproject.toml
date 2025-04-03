@@ -23,6 +23,11 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
 ]
 
+[project.urls]
+Homepage = "https://github.com/nurpax/pyspng/"
+Documentation = "https://pyspng.readthedocs.io/"
+Issues = "https://github.com/nurpax/pyspng/issues"
+
 [project.optional-dependencies]
 test = ["pytest"]
 
