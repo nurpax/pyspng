@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "pyspng"
-version = "0.1.2"
+version = "0.1.3"
 description = "Fast libspng-based PNG decoder"
 readme = "README.md"
 authors = [
