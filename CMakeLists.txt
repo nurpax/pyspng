@@ -14,24 +14,20 @@ project(
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
 find_package(pybind11 3.0 CONFIG REQUIRED)
 
+set(ZLIB_BUILD_TESTING OFF)
+set(ZLIB_BUILD_SHARED OFF)
+set(ZLIB_BUILD_STATIC ON)
+set(ZLIB_INSTALL OFF)
+add_subdirectory(vendor/zlib-1.4)
+# The static library is linked into a shared Python extension.
+set_target_properties(zlibstatic PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 # Add a library using FindPython's tooling (pybind11 also provides a helper like
 # this)
 pybind11_add_module(_pyspng_c MODULE pyspng/main.cpp)
 target_include_directories(_pyspng_c PRIVATE ${CMAKE_SOURCE_DIR}/vendor/libspng-0.7.4/spng)
-target_include_directories(_pyspng_c PRIVATE ${CMAKE_SOURCE_DIR}/vendor/zlib-1.2.11)
 target_compile_definitions(_pyspng_c PRIVATE SPNG_STATIC=1 VERSION_INFO=${PROJECT_VERSION})
-
-target_sources(_pyspng_c PRIVATE vendor/zlib-1.2.11/adler32.c)
-target_sources(_pyspng_c PRIVATE vendor/zlib-1.2.11/compress.c)
-target_sources(_pyspng_c PRIVATE vendor/zlib-1.2.11/crc32.c)
-target_sources(_pyspng_c PRIVATE vendor/zlib-1.2.11/deflate.c)
-target_sources(_pyspng_c PRIVATE vendor/zlib-1.2.11/infback.c)
-target_sources(_pyspng_c PRIVATE vendor/zlib-1.2.11/inffast.c)
-target_sources(_pyspng_c PRIVATE vendor/zlib-1.2.11/inflate.c)
-target_sources(_pyspng_c PRIVATE vendor/zlib-1.2.11/inftrees.c)
-target_sources(_pyspng_c PRIVATE vendor/zlib-1.2.11/trees.c)
-target_sources(_pyspng_c PRIVATE vendor/zlib-1.2.11/uncompr.c)
-target_sources(_pyspng_c PRIVATE vendor/zlib-1.2.11/zutil.c)
+target_link_libraries(_pyspng_c PRIVATE ZLIB::ZLIBSTATIC)
 
 target_sources(_pyspng_c PRIVATE vendor/libspng-0.7.4/spng/spng.c)
 
