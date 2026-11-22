@@ -25,7 +25,7 @@ with open('test.png', 'rb') as fin:
 pip install pyspng
 ```
 
-Note: binary wheels are built for Linux and Windows.  MacOS may not work out of the box.
+Binary wheels are available for Linux (x86_64 and arm64), Windows (x86_64), and macOS (arm64 / Apple Silicon).
 
 ## Local Development
 
