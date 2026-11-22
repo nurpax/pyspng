@@ -1,16 +1,16 @@
 [build-system]
-requires = ["scikit-build-core>=0.3.3", "pybind11"]
+requires = ["scikit-build-core>=0.3.3", "pybind11>=3.0"]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "pyspng"
-version = "0.1.4"
+version = "0.2.0"
 description = "Fast libspng-based PNG decoder"
 readme = "README.md"
 authors = [
   { name = "Janne Hellsten", email = "jjhellst@gmail.com" },
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = ["numpy"]
 classifiers = [
   "Development Status :: 4 - Beta",

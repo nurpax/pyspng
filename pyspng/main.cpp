@@ -1,5 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <pybind11/native_enum.h>
 
 #include "spng.h"
 
@@ -8,7 +9,10 @@ namespace py = pybind11;
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
-py::array decode_image_bytes(py::bytes png_bits, spng_format fmt) {
+py::array decode_image_bytes(py::bytes png_bits, spng_format fmt, int flags) {
+    if (flags & ~(SPNG_DECODE_TRNS | SPNG_DECODE_GAMMA)) {
+        throw py::value_error("pyspng: unsupported decode flags; only SPNG_DECODE_TRNS and SPNG_DECODE_GAMMA are supported");
+    }
     std::unique_ptr<spng_ctx, void(*)(spng_ctx*)> ctx(spng_ctx_new(0),  spng_ctx_free);
 
     // Ignore and don't calculate chunk CRC's
@@ -76,7 +80,7 @@ py::array decode_image_bytes(py::bytes png_bits, spng_format fmt) {
     }
 
     void* data = (void*)malloc(out_size);
-    if ((res = spng_decode_image(ctx.get(), data, out_size, fmt, 0)) != SPNG_OK) {
+    if ((res = spng_decode_image(ctx.get(), data, out_size, fmt, flags)) != SPNG_OK) {
         free(data);
         throw std::runtime_error("pyspng: could not decode image: " + std::string(spng_strerror(res)));
     }
@@ -115,11 +119,20 @@ PYBIND11_MODULE(_pyspng_c, m) {
         .value("SPNG_FMT_G8",     SPNG_FMT_G8)
         .export_values();
 
+    py::native_enum<spng_decode_flags>(m, "DecodeFlags", "enum.IntFlag",
+        "PNG decode transformations. Combine flags with |; use DecodeFlags(0) to disable transformations.")
+        .value("SPNG_DECODE_TRNS", SPNG_DECODE_TRNS,
+            "Apply tRNS transparency when the output format has alpha. Does not affect existing alpha channels.")
+        .value("SPNG_DECODE_GAMMA", SPNG_DECODE_GAMMA,
+            "Apply gamma correction from the gAMA chunk, assuming display gamma 2.2. Has no effect without gAMA.")
+        .export_values()
+        .finalize();
+
     m.def("spng_version_string", &spng_version_string, R"pbdoc(
         Return the libspng version.
     )pbdoc");
 
-    m.def("spng_decode_image_bytes", &decode_image_bytes, py::arg("data"), py::arg("fmt"), R"pbdoc(
+    m.def("spng_decode_image_bytes", &decode_image_bytes, py::arg("data"), py::arg("fmt"), py::arg("flags"), R"pbdoc(
         Decode PNG bytes into a numpy array.
 
         Note:
@@ -130,6 +143,7 @@ PYBIND11_MODULE(_pyspng_c, m) {
         Args:
             data (bytes): PNG file contents in memory.
             fmt: Output format.  SPNG_FMT_AUTO will auto-detect the output format based on PNG contents.
+            flags: DecodeFlags controlling transparency and gamma correction. Use DecodeFlags(0) to disable transformations.
 
         Returns:
             numpy.ndarray: Image pixel data in shape (height, width, nc).
