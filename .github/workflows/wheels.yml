@@ -5,29 +5,41 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - main
   release:
     types:
       - published
 
 env:
-  CIBW_TEST_COMMAND: python {project}/tests/test.py
+  CIBW_TEST_COMMAND: python {package}/tests/test.py
+  CIBW_TEST_REQUIRES: pillow
 
 jobs:
   build_wheels:
     name: Wheels on ${{ matrix.os }}
+    needs: build_sdist
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-14]
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-latest]
 
     steps:
-    - uses: actions/checkout@v5
+    - name: Download source distribution
+      uses: actions/download-artifact@v4
       with:
-        submodules: true
+        name: dist-sdist
+        path: sdist
 
-    - uses: pypa/cibuildwheel@v3.1.4
+    - name: Extract source distribution
+      shell: bash
+      run: |
+        mkdir source
+        tar -xzf sdist/*.tar.gz -C source --strip-components=1
+
+    - uses: pypa/cibuildwheel@v4.3.5
+      with:
+        package-dir: source
 
     - name: Upload wheels
       uses: actions/upload-artifact@v4
@@ -78,8 +90,11 @@ jobs:
     steps:
     - uses: actions/setup-python@v5
 
-    - name: Download all the dists
+    - name: Download combined distributions
       uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist
 
     - name: Display structure of downloaded files
       run: ls -R
